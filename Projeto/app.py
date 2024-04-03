@@ -507,7 +507,7 @@ def send_figure_to_graph(
         shapes = fig_shapes
         debug_print("shapes:", shapes)
         #fig = px.imshow(io.imread(filename), binary_backend="csv")
-        fig = update_graph(filename)
+        fig = prepareGraph(filename)
         fig.update_layout(
             shapes=[shape_data_remove_timestamp(sh) for sh in shapes],
             # reduce space between image and graph edges
@@ -518,12 +518,6 @@ def send_figure_to_graph(
         annotations_store[filename]["shapes"] = shapes
         return (fig, annotations_store)
     return dash.no_update
-
-
-def update_graph(image_files_data, annotations_store_data):
-    current_file = image_files_data['files'][image_files_data['current']]
-    fig = prepareGraph(current_file)
-    return fig
 
 @app.callback(
     Output("modal", "is_open"),
