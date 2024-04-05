@@ -95,7 +95,7 @@ def table_row_to_shape(tr):
         "x0": tr["X0"],
         "y0": tr["Y0"],
         "x1": tr["X1"],
-        "y1": tr["Y1"],
+        "y1": tr["Y1"]
     }
 
 
@@ -168,28 +168,10 @@ server = app.server
 # fig = px.imshow(io.imread(filelist[0]), binary_backend="jpg")
 fig = prepareGraph(filelist[0])
 fig.update_layout(
+    clickmode='event+select',
+    # dragmode='pan',
     newshape_line_color=color_dict[DEFAULT_ATYPE],
-    margin=dict(l=0, r=0, b=0, t=0, pad=4),
-    dragmode="drawrect",
-)
-
-# Buttons
-button_gh = dbc.Button(
-    "Learn more",
-    id="howto-open",
-    outline=True,
-    color="secondary",
-    # Turn off lowercase transformation for class .button in stylesheet
-    style={"textTransform": "none"},
-)
-
-button_howto = dbc.Button(
-    "View Code on github",
-    outline=True,
-    color="primary",
-    href="https://github.com/plotly/dash-sample-apps/tree/master/apps/dash-image-annotation",
-    id="gh-link",
-    style={"text-transform": "none"},
+    margin=dict(l=0, r=0, b=0, t=0, pad=4)
 )
 
 # Modal
@@ -207,13 +189,16 @@ modal_overlay = dbc.Modal(
 image_annotation_card = dbc.Card(
     id="imagebox",
     children=[
-        dbc.CardHeader(html.H2("Annotation area")),
+        # dbc.CardHeader(html.H2("Annotation area")),
         dbc.CardBody(
             [
                 dcc.Graph(
                     id="graph",
                     figure=fig,
-                    config={"modeBarButtonsToAdd": ["drawrect", "eraseshape"]},
+                    config={
+                        "modeBarButtonsToAdd": ["drawrect", "eraseshape", 'drawopenpath'] 
+            
+                    }
                 )
             ]
         ),
@@ -283,10 +268,7 @@ annotated_data_card = dbc.Card(
                             dcc.Store(
                                 id="annotations-store",
                                 data=dict(
-                                    **{
-                                        filename: {"shapes": []}
-                                        for filename in filelist
-                                    },
+                                    **{filename: {"shapes": [], "texts": []} for filename in filelist},
                                     **{"starttime": time_passed()}
                                 ),
                             ),
@@ -342,54 +324,9 @@ annotated_data_card = dbc.Card(
     ],
 )
 
-# Navbar
-navbar = dbc.Navbar(
-    dbc.Container(
-        [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.A(
-                            html.Img(
-                                src=app.get_asset_url("dash-logo-new.png"),
-                                height="30px",
-                            ),
-                            href="https://plot.ly",
-                        )
-                    ),
-                    dbc.Col(dbc.NavbarBrand("Image Annotation App")),
-                ],
-                align="center",
-            ),
-            dbc.Row(
-                dbc.Col(
-                    [
-                        dbc.NavbarToggler(id="navbar-toggler"),
-                        dbc.Collapse(
-                            dbc.Nav(
-                                [dbc.NavItem(button_howto), dbc.NavItem(button_gh)],
-                                className="ml-auto",
-                                navbar=True,
-                            ),
-                            id="navbar-collapse",
-                            navbar=True,
-                        ),
-                        modal_overlay,
-                    ]
-                ),
-                align="center",
-            ),
-        ],
-        fluid=True,
-    ),
-    color="dark",
-    dark=True,
-    className="mb-5",
-)
-
 app.layout = html.Div(
     [
-        navbar,
+        # navbar,
         dbc.Container(
             [
                 dbc.Row(
@@ -467,12 +404,20 @@ def modify_table_entries(
     else:
         return dash.no_update
 
-
 @app.callback(
-    [Output("graph", "figure"), Output("annotations-store", "data"),],
-    [Input("annotations-table", "data"), Input("annotation-type-dropdown", "value")],
-    [State("image_files", "data"), State("annotations-store", "data")],
+    [
+        Output("graph", "figure"), 
+        Output("annotations-store", "data")],
+    [
+        Input("annotations-table", "data"),
+        Input("annotation-type-dropdown", "value")
+     ],
+    [
+        State("image_files", "data"), 
+        State("annotations-store", "data")
+    ],
 )
+
 def send_figure_to_graph(
     annotations_table_data, annotation_type, image_files_data, annotations_store
 ):
@@ -482,7 +427,7 @@ def send_figure_to_graph(
         fig_shapes = [table_row_to_shape(sh) for sh in annotations_table_data]
         debug_print("fig_shapes:", fig_shapes)
         debug_print(
-            "annotations_store[%s]['shapes']:" % (filename,),
+            "annotations_store[%s]['shapes']:" % (filename),
             annotations_store[filename]["shapes"],
         )
         # find the shapes that are new
@@ -516,6 +461,7 @@ def send_figure_to_graph(
             dragmode="drawrect",
         )
         annotations_store[filename]["shapes"] = shapes
+        # annotations_store[filename]["texts"].append(annotation_type)
         return (fig, annotations_store)
     return dash.no_update
 

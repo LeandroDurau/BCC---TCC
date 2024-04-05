@@ -49,8 +49,8 @@ def load_and_prepare_data(file_path):
 ########################################################
 
 def calculate_valleys_peaks(df, selectedColumn):
-    maximum = df["Y"].max()
-    minimum = df["Y"].min()
+    maximum = df[selectedColumn].max()
+    minimum = df[selectedColumn].min()
     globalMean = (maximum + minimum) / 2
 
     pp = []  # previousPoints
@@ -58,8 +58,8 @@ def calculate_valleys_peaks(df, selectedColumn):
     cv = [[], []]  # cicle valley
     cp = [[], []]  # cicle peak
 
-    for index in range(len(df["Y"])):
-        value = df["Y"][index]
+    for index in range(len(df[selectedColumn])):
+        value = df[selectedColumn][index]
         pp.append(value)
 
         if len(pp) > 30:
@@ -86,9 +86,9 @@ def create_figure(df, columns):
     initial_col = columns[0]
     cv, cp = calculate_valleys_peaks(df, initial_col)
 
-    fig.add_trace(go.Scatter(x=df["Frame"], y=df["Y"], mode='lines', name=f'{initial_col}'))
-    fig.add_trace(go.Scatter(x=df["Frame"].iloc[cv[0]], y=df["Y"].iloc[cv[0]], mode='markers', name='Valleys', marker=dict(color='firebrick', size=10)))
-    fig.add_trace(go.Scatter(x=df["Frame"].iloc[cp[0]], y=df["Y"].iloc[cp[0]], mode='markers', name='Peaks', marker=dict(color='royalblue', size=10)))
+    fig.add_trace(go.Scatter(x=df["Frame"], y=df[initial_col], mode='lines', name=f'Eixo'))
+    fig.add_trace(go.Scatter(x=df["Frame"].iloc[cv[0]], y=df[initial_col].iloc[cv[0]], mode='markers', name='Vales', marker=dict(color='firebrick', size=10)))
+    fig.add_trace(go.Scatter(x=df["Frame"].iloc[cp[0]], y=df[initial_col].iloc[cp[0]], mode='markers', name='Picos', marker=dict(color='royalblue', size=10)))
 
     buttons = []
     for col in columns:
