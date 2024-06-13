@@ -1,0 +1,26 @@
+Com o protótipo realizamos as primeiras análises da base, e rodamos alguns testes com machine learning.
+
+Primeiras analises:
+	media de 243 mov
+	maior 650 
+	menor 35
+
+	media de 4 segunods
+	maior 5.8s
+	menor 3.7s
+	
+	mais de 15% da base possui dados faltantes
+	maior 21%
+	menor 5%
+
+
+	Temos focado no ponto LFTC Principalmente no eixo Y
+
+	Exemplo da distribuição em Y
+
+
+	Relação entre o eixo X e Y é forte nos picos e vales
+
+	Interpolação para preencher os dados faltantes
+
+	Fizemos uma separação de 70 treino 20 teste 10 validação
