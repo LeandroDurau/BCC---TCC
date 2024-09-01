@@ -6,12 +6,12 @@ import numpy as np
 import sys
 import xlsxwriter
 import math
-
+from scipy.interpolate import UnivariateSpline
 
 id = sys.argv[1]
 axis = sys.argv[2]
 
-
+# Listagem de pessoas
 lista_pessoas = {
     '08': 'Teresinha',
     '09': 'Noemi',
@@ -37,19 +37,15 @@ lista_pessoas = {
 
 pessoa = lista_pessoas[id]
 
+# Criação do xlsx
 workbook = xlsxwriter.Workbook(f"normalizacao/normalizado-{pessoa}.xlsx")
 worksheet = workbook.add_worksheet()
 
-# workbook = xlsxwriter.Workbook(f"./anotacoes_realizadas/reestrutura_{pessoa}_{axis}.xlsx", {'nan_inf_to_errors': True})
-# worksheet = workbook.add_worksheet(axis)
-
+# Leitura de dados
 df = pd.read_csv(f"./dados/{pessoa}_testeSL.csv", skiprows=[0,1,2,4,5], header=[0,1])
 df = df.rename(columns={'Unnamed: 0_level_0': ''})
 
-dfs = pd.read_excel(f"./anotacoes_realizadas/{pessoa}.xlsx", sheet_name=f"{axis}")
-dfs = dfs.transpose()
-
-
+# Listagem de pontos uteis
 columns = [
     f'Skeleton 0{id}:LFTC', #0
     f"Skeleton 0{id}:RIPS", #1
@@ -59,31 +55,29 @@ columns = [
     f"Skeleton 0{id}:LFLE", #5
 ]
 
+# Seleção do ponto
 selectedColumn = columns[0]
 selectedColumn2 = columns[0]
 
-########################################################
-# print(df.head())
-# print('\n\n')
-# print(df.keys())
-# print('\n\n')
+# Interpolação linear para remoção de NANs
+df[selectedColumn,axis] = df[selectedColumn, axis].interpolate()
+
 max = df[selectedColumn, axis].max()
 min = df[selectedColumn, axis].min()
 globalMean = (max + min) / 2
 
-pp = [] ## previousPoints
+pp = [] # Previous points
 uh = False # Uphill
 
 cv = [[],[]] #cicle valley
 cp = [[],[]] #cicle peak
 
-# helper = 1
-# helper2 = 1
-pv = 0
+pv = 0 # Peak ou valley (Para escrita das anotações no excel)
 
 pontos = []
 sizes = []
 
+# Variáveis para segmentação
 segmentos = []
 segmentos_temp = []
 last = 0
@@ -95,18 +89,15 @@ for index in range(len(df[selectedColumn,axis])):
     # Segmentando o dataset
     segmentos_temp.append(value)
 
-    # val = dfs[pv][helper]
-    # try:
-    #     worksheet.write(f'A{index}', val)
-    # except:
-    #     pass
-
+    # Manter pp com 25 pontos
     if len(pp) > 25 :
         pp.pop(0)
     elif len(pp) < 25:
         continue
    
     mean = np.mean(pp)
+
+    #Lógica para achar vales
     if (mean < value and not uh and value < globalMean):
         # Muda a direção
         uh = True
@@ -126,6 +117,7 @@ for index in range(len(df[selectedColumn,axis])):
         # helper += 1
         
 
+    #Lógica para achar picos
     if (mean > value and uh and value > globalMean):
         # Muda a direção
         uh = False
@@ -148,77 +140,23 @@ for index in range(len(df[selectedColumn,axis])):
 sizes.sort()
 sizes_median = median(sizes)
 
-print(sizes_median)
-
 row = 0
 col = 1
 up_idx=1
 down_idx=1
 
+# Interpolação dos segmentos para terem o mesmo tamanho
 for value in segmentos:
-    if (len(value) > sizes_median):
-        dif = int(len(value) - sizes_median)
-        aCada = len(value) // dif
+    old_indexes = np.arange(0, len(value))
+    new_indexes = np.linspace(0, len(value) - 1, int(sizes_median))
+    spl = UnivariateSpline(old_indexes, value, k=3, s=0)
+    new_val = spl(new_indexes)
 
-        for x in range(dif):
-            value.pop(x * aCada - x)
-
-    elif (len(value) < sizes_median):
-        dif = int(sizes_median - len(value))
-        aCada = len(value) // dif
-
-        for x in range(dif):
-            index = x * aCada - x;
-            if index == 0: 
-                index = 1
-            value.insert(index, value[index-1])
-
-    # Classes
-    if value[0] > value[-1]:
-        worksheet.write(row,0, dfs[2][down_idx])
-        down_idx += 1
-    else:
-        worksheet.write(row,0, dfs[0][up_idx])
-        up_idx += 1
-
-    #Passa pelo segmento a adiciona cada item a uma coluna da linha
-    for item in value:
-        if (math.isnan(item)):
-            item = value[col-2]
-            value[col] = value[col-2]
-        print(value[col-2], item)
+    for item in new_val:
         worksheet.write(row, col, item)
         col += 1
     col = 1
     row += 1
 
-
 workbook.close()
 exit()
-
-# diferencas = []
-
-# for index in range(len(pontos)):
-#     if index == 0:
-#         continue
-#     diferencas.append(pontos[index] - pontos[index - 1])
-
-# media = np.mean(diferencas)
-# print(f'{pessoa} - {media} frames - {media/120}s')
-# worksheet.write('A1', 'Tempo')
-# worksheet.write('A2', 'Pontos')
-# worksheet.write('B1', tempos)
-# worksheet.write('B2', pontos)
-#
-#
-# workbook.close()
-fig,ax = plt.subplots()
-sns.lineplot(y=df[selectedColumn2,axis], x = df["","Frame"])
-ax.scatter(cv[0], cv[1], c='firebrick', zorder=100)
-ax.scatter(cp[0], cp[1], c='orange', zorder=100)
-#
-for i in range(len(cv[0])):
-    ax.annotate(str(i+1), (cp[0][i], cp[1][i] + 1))
-    ax.annotate(str(i+1), (cv[0][i], cv[1][i] - 10))
-
-plt.show()
