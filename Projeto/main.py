@@ -1,11 +1,8 @@
 from numpy.lib import median
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import sys
 import xlsxwriter
-import math
 from scipy.interpolate import UnivariateSpline
 
 
@@ -41,9 +38,6 @@ pessoa = lista_pessoas[id]
 workbook = xlsxwriter.Workbook(f"normalizacao/normalizado-{pessoa}.xlsx")
 worksheet = workbook.add_worksheet()
 
-# workbook = xlsxwriter.Workbook(f"./anotacoes_realizadas/reestrutura_{pessoa}_{axis}.xlsx", {'nan_inf_to_errors': True})
-# worksheet = workbook.add_worksheet(axis)
-
 df = pd.read_csv(f"./dados/{pessoa}_testeSL.csv", skiprows=[0,1,2,4,5], header=[0,1])
 df = df.rename(columns={'Unnamed: 0_level_0': ''})
 
@@ -62,12 +56,6 @@ columns = [
 
 selectedColumn = columns[0]
 selectedColumn2 = columns[0]
-
-########################################################
-# print(df.head())
-# print('\n\n')
-# print(df.keys())
-# print('\n\n')
 
 df[selectedColumn,axis] = df[selectedColumn, axis].interpolate()
 
@@ -177,5 +165,3 @@ for value in segmentos:
     row += 1
 
 workbook.close()
-exit()
-
