@@ -6,8 +6,8 @@ import xlsxwriter
 from scipy.interpolate import UnivariateSpline
 
 
-id = sys.argv[1]
-axis = sys.argv[2]
+id = '18'#sys.argv[1]
+axis = 'Y'#sys.argv[2]
 
 
 lista_pessoas = {
@@ -53,7 +53,6 @@ columns = [
     f"Skeleton 0{id}:LUArm", #4
     f"Skeleton 0{id}:LFLE", #5
 ]
-print(df.astype('float64').dtypes)
 selectedColumn = columns[0]
 selectedColumn2 = columns[0]
 df[selectedColumn,axis] = df[selectedColumn, axis].interpolate()
