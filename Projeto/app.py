@@ -6,7 +6,7 @@ import dash_table
 import plotly.express as px
 import re
 import time
-from skimage import io
+import sys
 
 from dashboard import prepareGraph
 
@@ -158,15 +158,13 @@ def shape_data_remove_timestamp(shape):
 external_stylesheets = [dbc.themes.BOOTSTRAP, "style/image_annotation_style.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-filelist = [
-    'dados/nelson_testeSL.csv',
-    'dados/Marilene_testeSL.csv'
-]
-
 server = app.server
 
-# fig = px.imshow(io.imread(filelist[0]), binary_backend="jpg")
-fig = prepareGraph(filelist[0])
+# Pessoa Analisada
+id = sys.argv[1]
+axis = sys.argv[2]
+
+fig = prepareGraph(id, axis)
 fig.update_layout(
     clickmode='event+select',
     # dragmode='pan',
@@ -264,18 +262,18 @@ annotated_data_card = dbc.Card(
                                 ],
                                 fill_width=True,
                             ),
-                            dcc.Store(id="graph-copy", data=fig),
-                            dcc.Store(
-                                id="annotations-store",
-                                data=dict(
-                                    **{filename: {"shapes": [], "texts": []} for filename in filelist},
-                                    **{"starttime": time_passed()}
-                                ),
-                            ),
-                            dcc.Store(
-                                id="image_files",
-                                data={"files": filelist, "current": 0},
-                            ),
+                            # dcc.Store(id="graph-copy", data=fig),
+                            # dcc.Store(
+                            #     id="annotations-store",
+                            #     data=dict(
+                            #         **{filename: {"shapes": [], "texts": []} for filename in filelist},
+                            #         **{"starttime": time_passed()}
+                            #     ),
+                            # ),
+                            # dcc.Store(
+                            #     id="image_files",
+                            #     data={"files": filelist, "current": 0},
+                            # ),
                         ],
                     ),
                 ),
